@@ -7,6 +7,7 @@ from matplotlib import pyplot
 from fnc_common import *
 from fnc_cluster import *
 from fnc_oxcal import *
+from fnc_simulate import *
 
 fcurve = "intcal13.14c"
 
@@ -39,6 +40,48 @@ Command line syntax: \"python process.py [dates file].txt [sequence / contiguous
 		print("\nProcessing %d dates from %s" % (len(dates), fdates))
 		
 		pool = mp.Pool(processes = mp.cpu_count())
+		
+		
+		# Compare observed and randomized summed dates
+		
+		cal_ages, dists, summed, dists_rnd, sums_rnd = get_randomized(dates, curve, pool, p_diff_max = 0.001)
+		perc_lower = (p_value * 100) / 2
+		perc_upper = 100 - perc_lower
+		
+		sums_rnd_lower, sums_rnd_upper = calc_percentiles(sums_rnd, perc_lower, perc_upper)
+		pdiff = 0
+		mask = (summed > sums_rnd_upper)
+		if mask.any():
+			pdiff += (summed[mask] - sums_rnd_upper[mask]).sum()
+		mask = (summed < sums_rnd_lower)
+		if mask.any():
+			pdiff += (sums_rnd_lower[mask] - summed[mask]).sum()
+		if pdiff > 0:
+			single_event_txt = "Dates represent multiple events."
+		else:
+			single_event_txt = "Dates represent a single event."
+		
+		fsummed = fdates.split(".")[:-1]
+		fsummed[-1] += "_summed"
+		fsummed = os.path.join("output", ".".join(fsummed + ["pdf"]))
+		
+		fig = pyplot.figure(figsize = (15, 4))
+		pyplot.fill_between(cal_ages - 1950, sums_rnd_lower, sums_rnd_upper, color = "lightgrey", label = "%0.2f%% of randomized results" % (perc_upper - perc_lower))
+		pyplot.plot(cal_ages - 1950, summed, color = "k", label = "Observed dates")
+		pyplot.gca().invert_xaxis()
+		pyplot.xlabel("Calendar age (yrs BC)")
+		pyplot.ylabel("Summed p")
+		pyplot.annotate("Summed p outside interval of randomness = %0.3f\n%s" % (pdiff, single_event_txt), xy = (0.05, 0.95), xycoords = "axes fraction", horizontalalignment = "left", verticalalignment = "top")
+		pyplot.legend()
+		pyplot.tight_layout()
+		pyplot.savefig(fsummed)
+		fig.clf()
+		pyplot.close()
+		
+		print()
+		print("Summed p outside interval of randomness = %0.3f\n%s" % (pdiff, single_event_txt))
+		print()
+		
 		
 		# Calculate clustering
 		
@@ -79,6 +122,8 @@ Command line syntax: \"python process.py [dates file].txt [sequence / contiguous
 		
 		fig.tight_layout()
 		pyplot.savefig(fgraph)
+		fig.clf()
+		pyplot.close()
 		
 		# Find optimal number of clusters based on Silhouette and specified p-value and generate OxCal phasing model
 		
