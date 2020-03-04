@@ -42,7 +42,7 @@ Command line syntax: \"python process.py [dates file].txt [sequence / contiguous
 		
 		# Calculate clustering
 		
-		clusters, means, ps, sils = get_clusters_hca(dates, curve, pool)
+		clusters, means, ps, sils = get_clusters_hca(dates, curve, pool, p_diff_max = 0.001)
 		# clusters = {n: {label: [idx, ...], ...}, ...}; n = number of clusters, idx = index in dates
 		# means = {n: {label: mean, ...}, ...}; mean = mean of the summed distributions of the calibrated dates within the cluster
 		# ps = {n: p-value, ...}; p-value of the null hypothesis that the Silhouette for n clusters is the product of randomly distributed dates
@@ -71,8 +71,8 @@ Command line syntax: \"python process.py [dates file].txt [sequence / contiguous
 		ax2.set_ylabel("p", color = color2)
 		ax2.plot(clu_ns, ps_plot, color = color2)
 		ax2.plot(clu_ns, ps_plot, ".", color = color2)
-		ax2.plot([clu_ns[0], clu_ns[-1]], [0.05, 0.05], "--", color = color2, linewidth = 0.7)
-		ax2.annotate("p = 0.05", xy = (clu_ns.mean(), 0.05), xytext = (0, -3), textcoords = "offset pixels", va = "top", ha = "center", color = color2)
+		ax2.plot([clu_ns[0], clu_ns[-1]], [p_value, p_value], "--", color = color2, linewidth = 0.7)
+		ax2.annotate("p = %0.3f" % (p_value), xy = (clu_ns.mean(), p_value), xytext = (0, -3), textcoords = "offset pixels", va = "top", ha = "center", color = color2)
 		ax2.tick_params(axis = "y", labelcolor = color2)
 		
 		pyplot.xticks(clu_ns, clu_ns)
@@ -86,12 +86,28 @@ Command line syntax: \"python process.py [dates file].txt [sequence / contiguous
 		
 		n_opt = get_opt_clusters(clusters, ps, sils, p_value)
 		
+		if n_opt is None:
+			n_opt = 0
+		
 		print("\n\nFound optimal no. of clusters: %d\n" % (n_opt))
 		print("Generated Silhouette graph: %s" % (fgraph))
-		print("Generated OxCal model file: %s" % (foxcal))
 		
-		txt = gen_oxcal(clusters[n_opt], means[n_opt], dates, curve, model)
+		if n_opt > 0:
+			print("Generated OxCal model file: %s" % (foxcal))
+			txt = gen_oxcal(clusters[n_opt], means[n_opt], dates, curve, model)
+			
+			with open(foxcal, "w") as f:
+				f.write(txt)
 		
-		with open(foxcal, "w") as f:
+		fmeans = fdates.split(".")[:-1]
+		fmeans[-1] += "_means"
+		fmeans = os.path.join("output", ".".join(fmeans + ["csv"]))
+		print("Generated Means file: %s" % (fmeans))
+		
+		txt = "Clusters_n,Label,Mean (Cal. yrs BP)\n"
+		for n in means:
+			for label in means[n]:
+				txt += "%d,%d,%0.2f\n" % (n, label, means[n][label])
+		with open(fmeans, "w") as f:
 			f.write(txt)
 
