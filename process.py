@@ -34,7 +34,7 @@ Command line syntax: \"python process.py [dates file].txt [sequence / contiguous
 		if not os.path.isdir("output"):
 			os.makedirs("output")
 		
-		curve = load_calibration_curve(fcurve)
+		curve = load_calibration_curve(fcurve, interpolate = True)
 		dates = load_dates(fdates)  # [[lab_code, c14age, uncert], ...]
 		
 		print("\nProcessing %d dates from %s" % (len(dates), fdates))
@@ -56,6 +56,7 @@ Command line syntax: \"python process.py [dates file].txt [sequence / contiguous
 		mask = (summed < sums_rnd_lower)
 		if mask.any():
 			pdiff += (sums_rnd_lower[mask] - summed[mask]).sum()
+		
 		if pdiff > 0:
 			single_event_txt = "Dates represent multiple events."
 		else:
@@ -71,7 +72,7 @@ Command line syntax: \"python process.py [dates file].txt [sequence / contiguous
 		pyplot.gca().invert_xaxis()
 		pyplot.xlabel("Calendar age (yrs BC)")
 		pyplot.ylabel("Summed p")
-		pyplot.annotate("Summed p outside interval of randomness = %0.3f\n%s" % (pdiff, single_event_txt), xy = (0.05, 0.95), xycoords = "axes fraction", horizontalalignment = "left", verticalalignment = "top")
+		pyplot.annotate("Summed p outside interval of randomness = %f\n%s" % (pdiff, single_event_txt), xy = (0.05, 0.95), xycoords = "axes fraction", horizontalalignment = "left", verticalalignment = "top")
 		pyplot.legend()
 		pyplot.tight_layout()
 		pyplot.savefig(fsummed)
@@ -79,7 +80,8 @@ Command line syntax: \"python process.py [dates file].txt [sequence / contiguous
 		pyplot.close()
 		
 		print()
-		print("Summed p outside interval of randomness = %0.3f\n%s" % (pdiff, single_event_txt))
+		print()
+		print("Summed p outside interval of randomness = %f\n%s" % (pdiff, single_event_txt))
 		print()
 		
 		
@@ -149,10 +151,11 @@ Command line syntax: \"python process.py [dates file].txt [sequence / contiguous
 		fmeans = os.path.join("output", ".".join(fmeans + ["csv"]))
 		print("Generated Means file: %s" % (fmeans))
 		
-		txt = "Clusters_n,Label,Mean (Cal. yrs BP)\n"
+		txt = "Clusters_n,Phase,Mean (Cal. yrs BP)\n"
 		for n in means:
-			for label in means[n]:
-				txt += "%d,%d,%0.2f\n" % (n, label, means[n][label])
+			labels = sorted(list(means[n].keys()), key = lambda label: means[n][label])[::-1]
+			for idx, label in enumerate(labels):
+				txt += "%d,%d,%0.2f\n" % (n, idx + 1, means[n][label])
 		with open(fmeans, "w") as f:
 			f.write(txt)
 

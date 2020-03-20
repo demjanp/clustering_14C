@@ -1,11 +1,12 @@
 import numpy as np
+from scipy.interpolate import interp1d
 
-def load_calibration_curve(fcalib):
+def load_calibration_curve(fcalib, interpolate = False):
 	# load calibration curve
 	# data from: fcalib 14c file
 	# returns: [[CalBP, ConvBP, CalSigma], ...], sorted by CalBP
 	
-	with open(fcalib, "r", encoding = "ansi") as f:
+	with open(fcalib, "r") as f:
 		data = f.read()
 	data = data.split("\n")
 	cal_curve = []
@@ -15,6 +16,14 @@ def load_calibration_curve(fcalib):
 		cal_curve.append([float(value) for value in line.split(",")])
 	cal_curve = np.array(cal_curve)
 	cal_curve = cal_curve[np.argsort(cal_curve[:,0])]
+	
+	if interpolate:
+		cal_bp = np.arange(cal_curve[:,0].min(), cal_curve[:,0].max() + 1)
+		cal_curve = np.vstack((
+			cal_bp,
+			interp1d(cal_curve[:,0], cal_curve[:,1], kind = "quadratic")(cal_bp),
+			interp1d(cal_curve[:,0], cal_curve[:,2], kind = "linear")(cal_bp),
+		)).T
 	
 	return cal_curve
 
