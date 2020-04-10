@@ -4,6 +4,7 @@ from scipy.interpolate import interp1d
 def load_calibration_curve(fcalib, interpolate = False):
 	# load calibration curve
 	# data from: fcalib 14c file
+	#
 	# returns: [[CalBP, ConvBP, CalSigma], ...], sorted by CalBP
 	
 	with open(fcalib, "r") as f:
@@ -29,6 +30,7 @@ def load_calibration_curve(fcalib, interpolate = False):
 
 def load_dates(fname):
 	# load dates from text file where each row represents a date in the format: "[Lab Code], [14C Age], [Uncertainty]"
+	#
 	# returns [[lab_code, c14age, uncert], ...]
 	
 	with open(fname, "r") as f:
@@ -45,17 +47,21 @@ def load_dates(fname):
 	return dates
 
 def calibrate(age, uncert, curve_conv_age, curve_uncert):
-	# calibrate a 14C measurement
+	# calibrate a 14C date
 	# calibration formula as defined by Bronk Ramsey 2008, doi: 10.1111/j.1475-4754.2008.00394.x
 	# age: uncalibrated 14C age BP
 	# uncert: 1 sigma uncertainty
+	#
+	# returns distribution = [p, ...]; p = probability value of the corresponding calendar age on the calibration curve
 	
 	sigma_sum = uncert**2 + curve_uncert**2
 	return (np.exp(-(age - curve_conv_age)**2 / (2 * sigma_sum)) / np.sqrt(sigma_sum))
 
 def calibrate_multi(dates, curve):
+	# calibrate multiple 14C dates
 	# dates = [[lab_code, c14age, uncert], ...]
-	# returns distributions = [distribution, ...]; distribution = np.array([p, ...])
+	#
+	# returns distributions = [distribution, ...]; distribution = [p, ...]
 	curve_conv_age, curve_uncert = curve[:,1], curve[:,2]
 	collect = []
 	for _, c14age, uncert in dates:

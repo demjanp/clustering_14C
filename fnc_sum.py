@@ -18,20 +18,23 @@ def calc_mean_std(values, weights):
 	std = np.sqrt((((values - mean)**2) * weights).sum())
 	return mean, std
 
-def calc_percentiles(ps, perc_lower, perc_upper):
+def calc_percentiles(distributions, perc_lower, perc_upper):
+	# calculate lower and upper percentile of a set of probability distributions
+	# distributions = [distribution, ...]; distribution = [p, ...]
+	# returns dist_lower, dist_upper = [p, ...]
 	
-	size = len(ps[0]) * len(ps)
+	size = len(distributions[0]) * len(distributions)
 	if size > 50000000:
-		p_lower = []
-		p_upper = []
-		for i in range(len(ps[0])):
-			column = np.array([row[i] for row in ps])
-			p_lower.append(np.percentile(column, 5))
-			p_upper.append(np.percentile(column, 95))
-		p_lower = np.array(p_lower)
-		p_upper = np.array(p_upper)
+		dist_lower = []
+		dist_upper = []
+		for i in range(len(distributions[0])):
+			column = np.array([row[i] for row in distributions])
+			dist_lower.append(np.percentile(column, perc_lower))
+			dist_upper.append(np.percentile(column, perc_upper))
+		dist_lower = np.array(dist_lower)
+		dist_upper = np.array(dist_upper)
 	else:
-		p_lower = np.percentile(ps, perc_lower, axis = 0)
-		p_upper = np.percentile(ps, perc_upper, axis = 0)
+		dist_lower = np.percentile(distributions, perc_lower, axis = 0)
+		dist_upper = np.percentile(distributions, perc_upper, axis = 0)
 	
-	return p_lower, p_upper
+	return dist_lower, dist_upper
