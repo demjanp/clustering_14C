@@ -4,7 +4,7 @@
 
 A python implementation of the method of clustering radiocarbon dates in order to determine whether they represent separate events, or phases in time. For an overview of the method see:
 
-[insert citation of the 2020 paper]
+[upcoming paper] Clustering of calibrated radiocarbon dates: Site-specific chronological sequences identified by dense radiocarbon sampling.
 
 ## How to run
 <pre><code>python process.py [dates file].txt [sequence / contiguous / overlapping]</code></pre>
