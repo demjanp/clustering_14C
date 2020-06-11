@@ -21,6 +21,23 @@ def calc_clusters_hca(D, n):
 		clusters[label] = np.where(clusters_l == label)[0].tolist()
 	return clusters
 
+def get_n_clusters_hca(dates, curve, clusters_n):
+	# calculates clustering of dates using Hierarchical Cluster Analysis for n clusters
+	#
+	# returns clusters, means
+	# 	clusters = {label: [idx, ...], ...}; idx = index in dates
+	# 	means = {label: mean, ...}; mean = mean of the summed distributions of the calibrated dates within the cluster
+	
+	distributions = calibrate_multi(dates, curve)
+	D = calc_distance_matrix(distributions)
+	
+	clusters = calc_clusters_hca(D, clusters_n)
+	clusters = dict([(idx, clusters[ci]) for idx, ci in enumerate(list(clusters.keys()))])
+	means = {}
+	for ci in clusters:
+		means[ci] = calc_mean_std(curve[:,0], sum_14c([distributions[idx] for idx in clusters[ci]]))[0]
+	return clusters, means
+
 def calc_silhouette(D, clusters):
 	# calculate Silhouette of clustered dates as defined by Rousseeuw (1987, https://doi.org/10.1016/0377-0427(87)90125-7)
 	# clusters = {label: [idx, ...], ...}; idx = index of date in the distance matrix D

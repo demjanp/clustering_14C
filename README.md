@@ -7,7 +7,11 @@ A python implementation of the method of clustering radiocarbon dates in order t
 [insert citation of the 2020 paper]
 
 ## How to run
+Find optimal number of clusters:
 <pre><code>python process.py [dates file].txt [sequence / contiguous / overlapping]</code></pre>
+
+Find a specified number of clusters:
+<pre><code>python process_n.py [dates file].txt [clusters_n] [sequence / contiguous / overlapping]</code></pre>
 
 [sequence / contiguous / overlapping] specifies the type of OxCal phasing model generated. If no model is specified, sequence is used by default.
 
