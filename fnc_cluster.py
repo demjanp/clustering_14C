@@ -116,7 +116,7 @@ def get_clusters_hca(dates, curve, npass = 100, convergence = 0.99):
 	cal_bp_mean, cal_bp_std = calc_mean_std(curve_cal_age, sum_obs)
 	dates_n = dates.shape[0]
 	
-	n_cpus = mp.cpu_count()
+	n_cpus = N_CPUS
 	manager = mp.Manager()
 	state_mp = manager.list([1]) # 1: suspend, 2: run, 0: terminate
 	counter_mp = manager.list([0]*(n_cpus - 1))

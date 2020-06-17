@@ -1,5 +1,8 @@
 import numpy as np
+import multiprocessing as mp
 from scipy.interpolate import interp1d
+
+N_CPUS = mp.cpu_count() - 4
 
 def load_calibration_curve(fcalib, interpolate = False):
 	# load calibration curve

@@ -112,7 +112,7 @@ def get_randomized(dates, curve, npass = 100, convergence = 0.99):
 	dates_n = dates.shape[0]
 	
 	# generate sets of randomized distributions and their sums
-	n_cpus = mp.cpu_count()
+	n_cpus = N_CPUS
 	manager = mp.Manager()
 	state_mp = manager.list([1]) # 1: suspend, 2: run, 0: terminate
 	counter_mp = manager.list([0]*(n_cpus - 1))
