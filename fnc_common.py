@@ -6,8 +6,8 @@ def load_calibration_curve(fcalib, interpolate = False):
 	# data from: fcalib 14c file
 	#
 	# returns: [[CalBP, ConvBP, CalSigma], ...], sorted by CalBP
-	
-	with open(fcalib, "r") as f:
+
+	with open(fcalib, "r", encoding="latin1") as f:
 		data = f.read()
 	data = data.split("\n")
 	cal_curve = []

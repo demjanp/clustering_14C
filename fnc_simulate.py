@@ -6,7 +6,7 @@ from scipy.optimize import basinhopping
 from fnc_common import *
 from fnc_sum import *
 
-def gen_random_dists(dates_n, cal_bp_mean, cal_bp_std, curve_cal_age, curve_conv_age, curve_uncert, uncerts, state_mp, counter_mp, pi):
+def gen_random_dists(dates_n, cal_bp_mean, cal_bp_std, curve_cal_age, curve_conv_age, curve_uncert, uncerts, state_mp, counter_mp, pi, uniform):
 	# generate randomized distributions based on observed 14C dates
 	# dates_n = number of generated dates (distributions)
 	# cal_bp_mean, cal_bp_std = Mean and Standard Deviation of the sum of the generated distributions
@@ -43,6 +43,12 @@ def gen_random_dists(dates_n, cal_bp_mean, cal_bp_std, curve_cal_age, curve_conv
 		if state_mp[0] != 2:
 			return None
 		uncerts_rnd = [np.random.choice(uncerts) for i in range(dates_n)]
+		
+		# simuate 14C dates of samples with uniformly distributed calendar ages from interval <cal_bp_mean - cal_bp_std .. cal_bp_mean + cal_bp_std>
+		if uniform:
+			ages_14c = [curve_conv_age[np.argmin(np.abs(curve_cal_age - np.random.uniform(cal_bp_mean - cal_bp_std, cal_bp_mean + cal_bp_std + 0.1)))] for i in range(dates_n)]
+			return get_dists(ages_14c, uncerts_rnd)
+		
 		# generate initial guess by simulating 14C dates of samples with normally distributed calendar ages with cal_bp_mean, cal_bp_std
 		ages_14c = [curve_conv_age[np.argmin(np.abs(curve_cal_age - np.random.normal(cal_bp_mean, cal_bp_std)))] for i in range(dates_n)]
 		counter_mp[pi] = 0
@@ -52,14 +58,14 @@ def gen_random_dists(dates_n, cal_bp_mean, cal_bp_std, curve_cal_age, curve_conv
 			break
 	return get_dists(res.x, uncerts_rnd)
 
-def get_randomized_worker(state_mp, counter_mp, pi, distributions_mp, dates_n, cal_bp_mean, cal_bp_std, curve_cal_age, curve_conv_age, curve_uncert, uncerts):
+def get_randomized_worker(state_mp, counter_mp, pi, distributions_mp, dates_n, cal_bp_mean, cal_bp_std, curve_cal_age, curve_conv_age, curve_uncert, uncerts, uniform):
 	# worker process to generate randomized distributions
 	
 	while state_mp[0] > 0:
 		if state_mp[0] == 1:
 			continue
 		if state_mp[0] == 2:
-			distributions_mp.append(gen_random_dists(dates_n, cal_bp_mean, cal_bp_std, curve_cal_age, curve_conv_age, curve_uncert, uncerts, state_mp, counter_mp, pi))
+			distributions_mp.append(gen_random_dists(dates_n, cal_bp_mean, cal_bp_std, curve_cal_age, curve_conv_age, curve_uncert, uncerts, state_mp, counter_mp, pi, uniform))
 
 def get_randomized_master(state_mp, distributions_mp, sums_mp, npass, convergence):
 	# master process to generate sets of randomized distributions
@@ -84,7 +90,7 @@ def get_randomized_master(state_mp, distributions_mp, sums_mp, npass, convergenc
 	state_mp[0] = 0
 	sums_mp += sums
 
-def get_randomized(dates, curve, npass = 100, convergence = 0.99):
+def get_randomized(dates, curve, npass = 1000, convergence = 0.99, uniform = False):
 	# generate sets of randomized distributions based on observed 14C dates
 	# dates = observed 14C dates; [[lab_code, c14age, uncert], ...]
 	# curve = calibration curve; [[calendar age, 14C age, uncertainty], ...]
@@ -108,7 +114,12 @@ def get_randomized(dates, curve, npass = 100, convergence = 0.99):
 	uncerts = dates[:,1].astype(int)
 	# calculate mean and standard deviation of the summed distributions of the calibrated observed 14C dates
 	sum_obs = sum_14c(distributions)  # [[calBP, sum P], ...]
-	cal_bp_mean, cal_bp_std = calc_mean_std(curve_cal_age, sum_obs)
+	if uniform:
+		t1, t2 = calc_range(curve_cal_age, sum_obs, 0.9545)
+		cal_bp_mean = (t1 + t2) / 2
+		cal_bp_std = abs(t1 - t2) / 2
+	else:
+		cal_bp_mean, cal_bp_std = calc_mean_std(curve_cal_age, sum_obs)
 	dates_n = dates.shape[0]
 	
 	# generate sets of randomized distributions and their sums
@@ -120,7 +131,7 @@ def get_randomized(dates, curve, npass = 100, convergence = 0.99):
 	sums_mp = manager.list()
 	procs = []
 	for pi in range(n_cpus - 1):
-		procs.append(mp.Process(target = get_randomized_worker, args = (state_mp, counter_mp, pi, distributions_mp, dates_n, cal_bp_mean, cal_bp_std, curve_cal_age, curve_conv_age, curve_uncert, uncerts)))
+		procs.append(mp.Process(target = get_randomized_worker, args = (state_mp, counter_mp, pi, distributions_mp, dates_n, cal_bp_mean, cal_bp_std, curve_cal_age, curve_conv_age, curve_uncert, uncerts, uniform)))
 		procs[-1].start()
 	procs.append(mp.Process(target = get_randomized_master, args = (state_mp, distributions_mp, sums_mp, npass, convergence)))
 	procs[-1].start()

@@ -51,14 +51,14 @@ def calc_silhouette(D, clusters):
 		clusters_l[clusters[label]] = li + 1
 	return silhouette_score(D, clusters_l, metric = "precomputed")
 
-def get_clusters_hca_worker(state_mp, counter_mp, pi, D_rnd_pool_mp, dates_n, cal_bp_mean, cal_bp_std, curve_cal_age, curve_conv_age, curve_uncert, uncerts):
+def get_clusters_hca_worker(state_mp, counter_mp, pi, D_rnd_pool_mp, dates_n, cal_bp_mean, cal_bp_std, curve_cal_age, curve_conv_age, curve_uncert, uncerts, uniform):
 	# worker process for randomization testing of clustering solutions
 	
 	while state_mp[0] > 0:
 		if state_mp[0] == 1:
 			continue
 		if state_mp[0] == 2:
-			dists = gen_random_dists(dates_n, cal_bp_mean, cal_bp_std, curve_cal_age, curve_conv_age, curve_uncert, uncerts, state_mp, counter_mp, pi)
+			dists = gen_random_dists(dates_n, cal_bp_mean, cal_bp_std, curve_cal_age, curve_conv_age, curve_uncert, uncerts, state_mp, counter_mp, pi, uniform)
 			if dists is not None:
 				D_rnd_pool_mp.append(calc_distance_matrix(dists))
 	
@@ -97,8 +97,9 @@ def get_clusters_hca_master(state_mp, D_rnd_pool_mp, ps_mp, sils, npass, converg
 		ps_mp[clusters_n] = p
 	state_mp[0] = 0
 
-def get_clusters_hca(dates, curve, npass = 100, convergence = 0.99):
+def get_clusters_hca(dates, curve, npass = 1000, convergence = 0.99, uniform = False):
 	# calculates clustering of dates using Hierarchical Cluster Analysis for different numbers of clusters
+	# if uniform == True: assume uniform distribution of dates within clusters
 	#
 	# returns clusters, means, ps, sils
 	# 	clusters = {n: {label: [idx, ...], ...}, ...}; n = number of clusters, idx = index in dates
@@ -113,7 +114,12 @@ def get_clusters_hca(dates, curve, npass = 100, convergence = 0.99):
 	
 	uncerts = dates[:,1].astype(int)
 	sum_obs = sum_14c(distributions)  # [[calBP, sum P], ...]
-	cal_bp_mean, cal_bp_std = calc_mean_std(curve_cal_age, sum_obs)
+	if uniform:
+		t1, t2 = calc_range(curve_cal_age, sum_obs, 0.9545)
+		cal_bp_mean = (t1 + t2) / 2
+		cal_bp_std = abs(t1 - t2) / 2
+	else:
+		cal_bp_mean, cal_bp_std = calc_mean_std(curve_cal_age, sum_obs)
 	dates_n = dates.shape[0]
 	
 	n_cpus = mp.cpu_count()
@@ -138,7 +144,7 @@ def get_clusters_hca(dates, curve, npass = 100, convergence = 0.99):
 	
 	procs = []
 	for pi in range(n_cpus - 1):
-		procs.append(mp.Process(target = get_clusters_hca_worker, args = (state_mp, counter_mp, pi, D_rnd_pool_mp, dates_n, cal_bp_mean, cal_bp_std, curve_cal_age, curve_conv_age, curve_uncert, uncerts)))
+		procs.append(mp.Process(target = get_clusters_hca_worker, args = (state_mp, counter_mp, pi, D_rnd_pool_mp, dates_n, cal_bp_mean, cal_bp_std, curve_cal_age, curve_conv_age, curve_uncert, uncerts, uniform)))
 		procs[-1].start()
 	procs.append(mp.Process(target = get_clusters_hca_master, args = (state_mp, D_rnd_pool_mp, ps_mp, sils, npass, convergence)))
 	procs[-1].start()

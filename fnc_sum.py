@@ -18,6 +18,18 @@ def calc_mean_std(values, weights):
 	std = np.sqrt((((values - mean)**2) * weights).sum())
 	return mean, std
 
+def calc_range(values, weights, p):
+	
+	vals = np.unique(weights)
+	vals.sort()
+	for val in vals[::-1]:
+		mask = (weights >= val)
+		if weights[mask].sum() >= p:
+			idxs = np.where(mask)[0]
+			return values[idxs.min()], values[idxs.max()]
+	idxs = np.where(weights > 0)[0]
+	return values[idxs.min()], values[idxs.max()]
+
 def calc_percentiles(distributions, perc_lower, perc_upper):
 	# calculate lower and upper percentile of a set of probability distributions
 	# distributions = [distribution, ...]; distribution = [p, ...]
