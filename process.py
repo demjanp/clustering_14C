@@ -9,7 +9,7 @@ from fnc_cluster import *
 from fnc_oxcal import *
 from fnc_simulate import *
 
-fcurve = "intcal13.14c"
+fcurve = "intcal20.14c"
 
 p_value = 0.05
 

@@ -61,7 +61,7 @@ def get_clusters_hca_worker(state_mp, counter_mp, pi, D_rnd_pool_mp, dates_n, ca
 			dists = gen_random_dists(dates_n, cal_bp_mean, cal_bp_std, curve_cal_age, curve_conv_age, curve_uncert, uncerts, state_mp, counter_mp, pi, uniform)
 			if dists is not None:
 				D_rnd_pool_mp.append(calc_distance_matrix(dists))
-	
+
 def get_clusters_hca_master(state_mp, D_rnd_pool_mp, ps_mp, sils, npass, convergence):
 	# master process for randomization testing of clustering solutions
 	

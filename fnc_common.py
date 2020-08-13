@@ -15,6 +15,9 @@ def load_calibration_curve(fcalib, interpolate = False):
 	data = data.split("\n")
 	cal_curve = []
 	for line in data:
+		line = line.strip()
+		if not line:
+			continue
 		if line.startswith("#"):
 			continue
 		cal_curve.append([float(value) for value in line.split(",")])
