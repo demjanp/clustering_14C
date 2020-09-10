@@ -12,6 +12,7 @@ from fnc_simulate import *
 fcurve = "intcal13.14c"
 
 p_value = 0.05
+#p_value = 0.1
 
 if __name__ == '__main__':
 	
@@ -72,8 +73,13 @@ Command line syntax: \"python process.py [dates file].txt [sequence / contiguous
 		fig = pyplot.figure(figsize = (15, 4))
 		pyplot.fill_between(cal_ages - 1950, sums_rnd_lower, sums_rnd_upper, color = "lightgrey", label = "%0.2f%% of randomized results" % (perc_upper - perc_lower))
 		pyplot.plot(cal_ages - 1950, summed, color = "k", label = "Observed dates")
-		idxs = np.where(sums_rnd_upper > 0.001)[0]
-		pyplot.xlim(cal_ages[int(idxs.min())] - 1950, cal_ages[int(idxs.max())] - 1950)
+#		idx1, idx2 = calc_range(cal_ages, summed / summed.sum(), 0.9999)
+		idxs = np.where(sums_rnd_upper > 0)[0]
+		idx1, idx2 = idxs.min(), idxs.max()
+		pyplot.xlim(cal_ages[int(idx1)] - 1950, cal_ages[int(idx2)] - 1950)
+#		pyplot.xlim(3600 - 1950, 2200 - 1950)  # DEBUG 6 events
+#		pyplot.xlim(3300 - 1950, 2700 - 1950)  # DEBUG 2 events
+#		pyplot.xlim(7300 - 1950, 6750 - 1950)  # DEBUG herxheim
 		pyplot.gca().invert_xaxis()
 		pyplot.xlabel("Calendar age (yrs BC)")
 		pyplot.ylabel("Summed p")

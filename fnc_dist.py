@@ -36,7 +36,11 @@ def calc_distances_pca(D, n_components = None):
 	
 	if n_components is None:
 		pca = PCA(n_components = None)
-		pca.fit(D)
+		try:
+			pca.fit(D)
+		except:
+			print("\nWarning: could not calculate PCA of the distance matrix!\n")
+			return D
 		n_components = np.where(np.cumsum(pca.explained_variance_ratio_) > 0.99)[0]
 		if not n_components.size:
 			n_components = 1

@@ -2,23 +2,25 @@ import numpy as np
 import multiprocessing as mp
 from scipy.interpolate import interp1d
 
-N_CPUS = mp.cpu_count() - 4
+N_CPUS = mp.cpu_count() - 1
 
 def load_calibration_curve(fcalib, interpolate = False):
 	# load calibration curve
 	# data from: fcalib 14c file
-	#
 	# returns: [[CalBP, ConvBP, CalSigma], ...], sorted by CalBP
-
-	with open(fcalib, "r", encoding="latin1") as f:
+	
+	with open(fcalib, "r") as f:
 		data = f.read()
 	data = data.split("\n")
 	cal_curve = []
 	for line in data:
+		line = line.strip()
+		if not line:
+			continue
 		if line.startswith("#"):
 			continue
-		cal_curve.append([float(value) for value in line.split(",")])
-	cal_curve = np.array(cal_curve)
+		cal_curve.append([np.float64(value) for value in line.split(",")])
+	cal_curve = np.array(cal_curve, dtype = np.float64)
 	cal_curve = cal_curve[np.argsort(cal_curve[:,0])]
 	
 	if interpolate:
@@ -29,7 +31,7 @@ def load_calibration_curve(fcalib, interpolate = False):
 			interp1d(cal_curve[:,0], cal_curve[:,2], kind = "linear")(cal_bp),
 		)).T
 	
-	return cal_curve
+	return cal_curve.astype(np.float64)
 
 def load_dates(fname):
 	# load dates from text file where each row represents a date in the format: "[Lab Code], [14C Age], [Uncertainty]"

@@ -3,6 +3,7 @@ import multiprocessing as mp
 from scipy.stats import norm
 from sklearn.metrics import silhouette_score
 from scipy.cluster.hierarchy import linkage, fcluster
+from scipy.spatial.distance import squareform
 
 from fnc_common import *
 from fnc_dist import *
@@ -14,7 +15,10 @@ def calc_clusters_hca(D, n):
 	#
 	# returns clusters = {label: [idx, ...], ...}; idx = index of date in the distance matrix D
 	
-	clusters_l = fcluster(linkage(calc_distances_pca(D), method = "ward", metric = "euclidean"), n, criterion = "maxclust")
+	d = calc_distances_pca(D)
+	if d.shape[0] == d.shape[1]:
+		d = squareform(d)
+	clusters_l = fcluster(linkage(d, method = "ward", metric = "euclidean"), n, criterion = "maxclust")
 	labels = np.unique(clusters_l)
 	clusters = {}
 	for label in labels:
@@ -61,7 +65,7 @@ def get_clusters_hca_worker(state_mp, counter_mp, pi, D_rnd_pool_mp, dates_n, ca
 			dists = gen_random_dists(dates_n, cal_bp_mean, cal_bp_std, curve_cal_age, curve_conv_age, curve_uncert, uncerts, state_mp, counter_mp, pi, uniform)
 			if dists is not None:
 				D_rnd_pool_mp.append(calc_distance_matrix(dists))
-	
+
 def get_clusters_hca_master(state_mp, D_rnd_pool_mp, ps_mp, sils, npass, convergence):
 	# master process for randomization testing of clustering solutions
 	
@@ -95,6 +99,7 @@ def get_clusters_hca_master(state_mp, D_rnd_pool_mp, ps_mp, sils, npass, converg
 		else:
 			p = 1 - float(norm(sils_rnd.mean(), s).cdf(sils[clusters_n]))
 		ps_mp[clusters_n] = p
+		print("P:%f\n" % p) # DEBUG
 	state_mp[0] = 0
 
 def get_clusters_hca(dates, curve, npass = 1000, convergence = 0.99, uniform = False):
