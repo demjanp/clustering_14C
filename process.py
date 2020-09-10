@@ -77,9 +77,6 @@ Command line syntax: \"python process.py [dates file].txt [sequence / contiguous
 		idxs = np.where(sums_rnd_upper > 0)[0]
 		idx1, idx2 = idxs.min(), idxs.max()
 		pyplot.xlim(cal_ages[int(idx1)] - 1950, cal_ages[int(idx2)] - 1950)
-#		pyplot.xlim(3600 - 1950, 2200 - 1950)  # DEBUG 6 events
-#		pyplot.xlim(3300 - 1950, 2700 - 1950)  # DEBUG 2 events
-#		pyplot.xlim(7300 - 1950, 6750 - 1950)  # DEBUG herxheim
 		pyplot.gca().invert_xaxis()
 		pyplot.xlabel("Calendar age (yrs BC)")
 		pyplot.ylabel("Summed p")
