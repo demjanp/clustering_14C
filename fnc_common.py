@@ -2,14 +2,14 @@ import numpy as np
 import multiprocessing as mp
 from scipy.interpolate import interp1d
 
-N_CPUS = mp.cpu_count() - 1
+N_CPUS = min(30, mp.cpu_count() - 1)
 
 def load_calibration_curve(fcalib, interpolate = False):
 	# load calibration curve
 	# data from: fcalib 14c file
 	# returns: [[CalBP, ConvBP, CalSigma], ...], sorted by CalBP
 	
-	with open(fcalib, "r") as f:
+	with open(fcalib, "r", encoding="latin1") as f:
 		data = f.read()
 	data = data.split("\n")
 	cal_curve = []
@@ -38,7 +38,7 @@ def load_dates(fname):
 	#
 	# returns [[lab_code, c14age, uncert], ...]
 	
-	with open(fname, "r") as f:
+	with open(fname, "r", encoding="latin1") as f:
 		rows = f.read()
 	dates = []
 	rows = rows.split("\n")

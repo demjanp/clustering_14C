@@ -4,7 +4,7 @@
 
 A python implementation of the method of clustering radiocarbon dates in order to determine whether they represent separate events, or phases in time. For an overview of the method see:
 
-[upcoming paper] Demján, P., Pavúk, P. Clustering of calibrated radiocarbon dates: Site-specific chronological sequences identified by dense radiocarbon sampling.
+Demján, P., & Pavúk, P. (2021). CLUSTERING OF CALIBRATED RADIOCARBON DATES: SITE-SPECIFIC CHRONOLOGICAL SEQUENCES IDENTIFIED BY DENSE RADIOCARBON SAMPLING. Radiocarbon, 63(2), 429-438. doi:10.1017/RDC.2020.129
 
 ## How to run
 Find optimal number of clusters:

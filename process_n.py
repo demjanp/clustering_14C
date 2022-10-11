@@ -9,7 +9,7 @@ from fnc_cluster import *
 from fnc_oxcal import *
 from fnc_simulate import *
 
-fcurve = "intcal13.14c"
+fcurve = "intcal20.14c"
 
 if __name__ == '__main__':
 	
@@ -19,7 +19,7 @@ if __name__ == '__main__':
 	if not args:
 		print('''
 Dates file not specified.
-Command line syntax: \"python process_n.py [dates file].txt [clusters_n] [sequence / contiguous / overlapping]\"
+Command line syntax: \"python process_n.py [dates file].txt [clusters_n] [sequence / contiguous / overlapping / none]\"
 \tclusters_n = number of clusters to extract
 \tsequence / contiguous / overlapping specifies the type of OxCal phasing model generated.
 \tIf no model is specified, sequence is used by default.
@@ -28,7 +28,7 @@ Command line syntax: \"python process_n.py [dates file].txt [clusters_n] [sequen
 		fdates = args[0].strip()
 		clusters_n = int(args[1].strip())
 		model = "sequence"
-		if (len(args) > 2) and (args[2].strip().lower() in ["sequence", "contiguous", "overlapping"]):
+		if (len(args) > 2) and (args[2].strip().lower() in ["sequence", "contiguous", "overlapping", "none"]):
 			model = args[2].strip().lower()
 		
 		if not os.path.isdir("output"):

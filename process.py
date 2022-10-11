@@ -11,8 +11,8 @@ from fnc_simulate import *
 
 fcurve = "intcal20.14c"
 
-p_value = 0.05
-#p_value = 0.1
+#p_value = 0.05
+p_value = 0.1
 
 if __name__ == '__main__':
 	
@@ -22,8 +22,8 @@ if __name__ == '__main__':
 	if not args:
 		print('''
 Dates file not specified.
-Command line syntax: \"python process.py [dates file].txt [sequence / contiguous / overlapping]\"
-\tsequence / contiguous / overlapping specifies the type of OxCal phasing model generated.
+Command line syntax: \"python process.py [dates file].txt [sequence / contiguous / overlapping / none]\"
+\tsequence / contiguous / overlapping / none specifies the type of OxCal phasing model generated.
 \tIf no model is specified, sequence is used by default.
 		''')
 	else:
@@ -31,7 +31,7 @@ Command line syntax: \"python process.py [dates file].txt [sequence / contiguous
 		model = "sequence"
 		uniform = False
 		if len(args) > 1:
-			if args[1].strip().lower() in ["sequence", "contiguous", "overlapping"]:
+			if args[1].strip().lower() in ["sequence", "contiguous", "overlapping", "none"]:
 				model = args[1].strip().lower()
 			elif args[1].strip().lower() == "uniform":
 				uniform = True
@@ -46,7 +46,7 @@ Command line syntax: \"python process.py [dates file].txt [sequence / contiguous
 		
 		print("\nProcessing %d dates from %s" % (len(dates), fdates))
 		
-		
+		'''
 		# Randomization testing of the null hypothesis that the observed 14C dates represent a normal / uniform distribution
 		
 		cal_ages, dists, summed, dists_rnd, sums_rnd, p = get_randomized(dates, curve, uniform = uniform)
@@ -86,6 +86,7 @@ Command line syntax: \"python process.py [dates file].txt [sequence / contiguous
 		pyplot.savefig(fsummed)
 		fig.clf()
 		pyplot.close()
+		'''
 		
 		# Calculate clustering
 		

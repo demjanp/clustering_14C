@@ -15,10 +15,10 @@ def gen_dates(dates):
 def gen_sequence(data):
 	
 	txt = ""
-	for phase in data:
+	for phase in sorted(list(data.keys())):
 		txt += '''
 		Boundary("Start %d");
-		Phase("%d");
+		Phase("%d")
 		{
 			%s
 		};
@@ -36,7 +36,7 @@ def gen_contiguous(data):
 	
 	txt = ""
 	last_phase = None
-	for phase in data:
+	for phase in sorted(list(data.keys())):
 		if last_phase is None:
 			txt += '''
 		Boundary("Start %d");
@@ -66,7 +66,7 @@ def gen_contiguous(data):
 def gen_overlapping(data):
 	
 	txt = ""
-	for phase in data:
+	for phase in sorted(list(data.keys())):
 		txt += '''
 		Sequence()
 		{
@@ -85,11 +85,21 @@ def gen_overlapping(data):
 	};
 	''' % (txt)
 
+def gen_none(data):
+	
+	txt = ""
+	for phase in sorted(list(data.keys())):
+		txt += '''
+		Label("Cluster %d");
+		%s
+		''' % (phase, gen_dates(data[phase]))
+	return txt
+
 def gen_oxcal(clusters, means, dates, curve, model):
 	# Generate OxCal phasing model based on clustering
 	# clusters = {label: [idx, ...], ...}; idx = index in dates
 	# means = {label: mean, ...}
-	# model = "sequence" / "contiguous" / "overlapping"
+	# model = "sequence" / "contiguous" / "overlapping" / "none"
 	
 	distributions = calibrate_multi(dates, curve)
 	date_means = np.array([calc_mean_std(curve[:,0], dist)[0] for dist in distributions])
@@ -99,12 +109,14 @@ def gen_oxcal(clusters, means, dates, curve, model):
 	data = {} # {phase: [[lab_code, c14age, uncert], ...], ...}
 	phase = 1
 	for label in labels:
-		data[phase] = [dates[idx] for idx in sorted(clusters[label], key = lambda idx: date_means[idx])[::-1]]
+#		data[phase] = [dates[idx] for idx in sorted(clusters[label], key = lambda idx: date_means[idx])[::-1]]
+		data[phase] = [dates[idx] for idx in sorted(clusters[label], key = lambda idx: dates[idx][1])[::-1]]  # DEBUG
 		phase += 1
 	txt = {
 		"sequence": gen_sequence,
 		"contiguous": gen_contiguous,
 		"overlapping": gen_overlapping,
+		"none": gen_none,
 	}[model](data)
 	return '''
 Plot()
